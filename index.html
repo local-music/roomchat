@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>RoomCode Chat & Games — a Chrome extension for chatting with friends</title>
+<style>
+  :root {
+    --bg: #0b1220;
+    --panel: #121b2e;
+    --border: #22304a;
+    --text: #e7edf7;
+    --muted: #8ba0c2;
+    --accent: #38bdf8;
+    --amber: #fbbf24;
+    --mono: "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: var(--sans); }
+  body { line-height: 1.5; }
+  a { color: var(--accent); }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 20px; }
+
+  header.top { padding: 22px 0; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; }
+  .brand .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  nav.top-links { display: flex; gap: 18px; font-size: 13px; }
+  nav.top-links a { color: var(--muted); text-decoration: none; }
+  nav.top-links a:hover { color: var(--text); }
+
+  .hero { padding: 72px 0 48px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; }
+  .hero h1 { font-size: 40px; line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.01em; }
+  .hero p.lead { color: var(--muted); font-size: 16px; max-width: 46ch; margin: 0 0 28px; }
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; text-decoration: none; border: 1px solid transparent; }
+  .btn-primary { background: var(--accent); color: #04121f; }
+  .btn-primary:hover { background: #5ccdfa; }
+  .btn-ghost { border-color: var(--border); color: var(--text); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .mock { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .mock-bar { padding: 9px 12px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--muted); }
+  .mock-bar .code { font-family: var(--mono); color: var(--amber); letter-spacing: 0.04em; }
+  .mock-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .bubble { background: #0e1626; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 13px; max-width: 86%; }
+  .bubble .who { font-weight: 700; font-size: 11.5px; margin-bottom: 2px; }
+  .bubble.r1 .who { color: #67e8f9; }
+  .bubble.r2 .who { color: #fca5a5; }
+  .bubble.r3 { align-self: flex-end; border-color: var(--accent); }
+  .bubble.r3 .who { color: var(--accent); }
+  .mock-type { font-family: var(--mono); font-size: 11px; color: var(--muted); padding: 0 14px 14px; }
+
+  section.features { padding: 40px 0; border-top: 1px solid var(--border); }
+  section.features h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 700; margin: 0 0 4px; }
+  .group { padding: 22px 0; border-bottom: 1px solid var(--border); }
+  .group:last-child { border-bottom: none; }
+  .group-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .group-head .tag { font-size: 20px; }
+  .group-head h3 { font-size: 17px; margin: 0; }
+  ul.feat { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
+  ul.feat li { font-size: 13.5px; color: var(--muted); padding-left: 16px; position: relative; }
+  ul.feat li::before { content: ">"; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+  ul.feat li strong { color: var(--text); font-weight: 600; }
+
+  section.install { padding: 40px 0; border-top: 1px solid var(--border); }
+  ol.steps { margin: 16px 0 0; padding: 0 0 0 22px; color: var(--muted); font-size: 14px; }
+  ol.steps li { margin-bottom: 10px; }
+  ol.steps code, p code, li code { font-family: var(--mono); background: #0e1626; border: 1px solid var(--border); border-radius: 5px; padding: 1px 6px; color: var(--text); font-size: 12.5px; }
+  pre { background: #0e1626; border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; color: var(--text); }
+
+  footer { padding: 28px 0 48px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12.5px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  @media (max-width: 760px) {
+    .hero { grid-template-columns: 1fr; padding-top: 44px; }
+    .hero h1 { font-size: 30px; }
+    ul.feat { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand"><span class="dot"></span> RoomCode Chat & Games</div>
+    <nav class="top-links">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/REPLACE_OWNER/REPLACE_REPO">Source</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <div>
+      <h1>Type a code.<br>You're in the room.</h1>
+      <p class="lead">A Chrome side-panel extension for chatting with friends across different laptops — group rooms by code, 1-on-1 DMs, live mini-games, and an admin panel to keep things civil.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/REPLACE_OWNER/REPLACE_REPO/releases/latest/download/room-chat-extension.zip">⬇ Download latest release</a>
+        <a class="btn btn-ghost" href="#install">Install instructions</a>
+      </div>
+    </div>
+    <div class="mock">
+      <div class="mock-bar"><span>Room</span><span class="code">FD9K2Q</span></div>
+      <div class="mock-body">
+        <div class="bubble r1"><div class="who">luke</div>finally got the side panel working</div>
+        <div class="bubble r2"><div class="who">bob</div>🎮 Play → Connect 4?</div>
+        <div class="bubble r3"><div class="who">you</div>bet. loser gets the dog whistle</div>
+      </div>
+      <div class="mock-type">bob is typing…</div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <h2>What's inside</h2>
+
+    <div class="group">
+      <div class="group-head"><span class="tag">💬</span><h3>Accounts, friends & chat</h3></div>
+      <ul class="feat">
+        <li><strong>Sign up / log in</strong> with a username and password</li>
+        <li><strong>Mutual friend requests</strong> — accept once, friends both ways</li>
+        <li><strong>1-on-1 DMs</strong> as clickable friend circles</li>
+        <li><strong>Create or join rooms</strong> by a shared code</li>
+        <li><strong>Saved rooms</strong> with your own labels, one tap back in</li>
+        <li><strong>Stays open</strong> in Chrome's side panel while you browse</li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <div class="group-head"><span class="tag">🛡️</span><h3>Roles & moderation</h3></div>
+      <ul class="feat">
+        <li><strong>Group Creator → Admin → Moderator → Member</strong> hierarchy</li>
+        <li>Promote, demote and kick — always with a confirmation step</li>
+        <li><strong>Admin Panel</strong>: ban/unban, reset passwords, delete rooms</li>
+        <li>Read-only room &amp; DM review for moderation, disclosed up front</li>
+        <li><strong>🚩 Report</strong> a chat to send admins the last 30 messages</li>
+        <li>Site-wide announcements, text or voice</li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <div class="group-head"><span class="tag">🎮</span><h3>Games & sound</h3></div>
+      <ul class="feat">
+        <li>Live <strong>Tic-Tac-Toe, Connect 4 &amp; Rock-Paper-Scissors</strong></li>
+        <li>Challenge anyone in a DM or room — others can spectate</li>
+        <li><strong>Soundboard</strong>: air horn, sad trombone, dog whistle &amp; more</li>
+        <li>Record or upload your own clips, loud by default</li>
+        <li><strong>Text-to-speech</strong> broadcasts, read aloud instantly</li>
+        <li>Desktop pop-ups even when the panel's closed</li>
+      </ul>
+    </div>
+
+    <div class="group">
+      <div class="group-head"><span class="tag">🎨</span><h3>Make it yours</h3></div>
+      <ul class="feat">
+        <li>7 themes: Dark, Light, Midnight, Ocean, Forest, Sunset, High Contrast</li>
+        <li>Per-person notification toggles for every category</li>
+        <li>Colored usernames throughout every chat</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="install" id="install">
+    <h2 style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;">Install it</h2>
+    <ol class="steps">
+      <li>Download the latest release above and unzip it.</li>
+      <li>Open <code>chrome://extensions</code> and turn on <strong>Developer mode</strong>.</li>
+      <li>Click <strong>Load unpacked</strong> and select the folder containing <code>manifest.json</code>.</li>
+      <li>Click the extension icon to open the side panel, then <strong>Sign Up</strong>. The first account created becomes the Owner.</li>
+    </ol>
+    <p style="color:var(--muted);font-size:13.5px;">Runs against a Firebase Realtime Database. Point it at your own by publishing this rule:</p>
+    <pre>{ "rules": { ".read": true, ".write": true } }</pre>
+    <p style="color:var(--muted);font-size:13px;">Full setup notes are in the repo's <a href="https://github.com/REPLACE_OWNER/REPLACE_REPO#readme">README</a>.</p>
+  </section>
+
+  <footer>
+    <span>RoomCode Chat & Games — built for a small group of friends, not a public service.</span>
+    <span><a href="https://github.com/REPLACE_OWNER/REPLACE_REPO">GitHub</a></span>
+  </footer>
+
+</div>
+</body>
+</html>
